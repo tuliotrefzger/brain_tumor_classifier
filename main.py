@@ -26,7 +26,7 @@ def main():
 
     num_classes = 3
     img_size = 256
-    dataset_path = "./patientImages/splits"
+    dataset_path = "../patientImages/splits"
 
     #Treino sem degradação
     path_salvar_modelo = "./resultados/treino_nao_degradadas/"
