@@ -301,7 +301,7 @@ def test(model,
         pred = torch.stack(pred)
 
         # Define ground-truth labels as a list
-        LABELS = ['Meningioma', 'Glioma', 'Pitutary']
+        LABELS = ['Meningioma', 'Glioma', 'Pituitary']
 
         # Plot the confusion matrix
         arr = confusion_matrix(labels.view(-1).cpu(), pred.view(-1).cpu()) # corrigir no colab, essa linha estava errada, ytrue vem antes de ypred

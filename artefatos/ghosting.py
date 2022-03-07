@@ -1,3 +1,5 @@
+# Necessary:
+# pip install torchio
 from PIL import Image
 import numpy as np
 import torchio as tio

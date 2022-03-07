@@ -49,6 +49,11 @@ def teste_artefatos_aux(model,
     acc_list = []
     loss_list = []
 
+    if type(artefatos) != list:
+        artefatos = [artefatos]
+    if type(artefatos_nomes) != list:
+        artefatos_nomes = [artefatos_nomes]
+
     print("Iniciando teste com artefatos separados")
 
     for func_artefato in artefatos:
@@ -66,8 +71,20 @@ def teste_artefatos_aux(model,
     plt.ylabel("Accuracy(%)")
     plt.legend()
     plt.tight_layout()
+    if len(artefatos) == 1:
+        for acc, index in zip(acc_list[0], range(0, 10+1)):
+            label = "{}".format(round(acc))
+
+            plt.annotate(label, # this is the text
+                         (index,acc), # this is the point to label
+                         textcoords="offset points", # how to position the text
+                         xytext=(0,10), # distance from text to points (x,y)
+                         ha='center') # horizontal alignment can be left, right or center
     # plt.show()
-    plt.savefig(f'{path_salvar_modelo}accXdeglevel.png')
+    if len(artefatos) == 1:
+        plt.savefig(f'{path_salvar_modelo}accXdeglevel_{artefatos_nomes[0]}.png')
+    else:
+        plt.savefig(f'{path_salvar_modelo}accXdeglevel.png')
 
     plt.figure()
     for loss, nome in zip(loss_list, artefatos_nomes):
@@ -80,7 +97,10 @@ def teste_artefatos_aux(model,
     plt.legend()
     plt.tight_layout()
     # plt.show()
-    plt.savefig(f'{path_salvar_modelo}lossXdeglevel.png')
+    if len(artefatos) == 1:
+        plt.savefig(f'{path_salvar_modelo}lossXdeglevel_{artefatos_nomes[0]}.png')
+    else:
+        plt.savefig(f'{path_salvar_modelo}lossXdeglevel.png')
     print("Teste com artefatos separados finalizado")
 
 
