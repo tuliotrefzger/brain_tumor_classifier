@@ -17,7 +17,6 @@ def import_nn(num_classes, device):
     Vamos treinar a rede para melhorar os pesos para nosso problema
     """
 
-
     # instantiate transfer learning model
     model = models.resnet50(pretrained=True)
 
@@ -30,14 +29,16 @@ def import_nn(num_classes, device):
     n_inputs = model.fc.in_features
 
     # redefine fc layer / top layer/ head for our classification problem
-    model.fc = nn.Sequential(nn.Linear(n_inputs, 2048),
-                                    nn.SELU(),
-                                    nn.Dropout(p=0.4),
-                                    nn.Linear(2048, 2048),
-                                    nn.SELU(),
-                                    nn.Dropout(p=0.4),
-                                    nn.Linear(2048, num_classes),
-                                    nn.LogSigmoid())
+    model.fc = nn.Sequential(
+        nn.Linear(n_inputs, 2048),
+        nn.SELU(),
+        nn.Dropout(p=0.4),
+        nn.Linear(2048, 2048),
+        nn.SELU(),
+        nn.Dropout(p=0.4),
+        nn.Linear(2048, num_classes),
+        nn.LogSigmoid(),
+    )
 
     # set all paramters of the model as trainable
     for name, child in model.named_children():
@@ -45,18 +46,19 @@ def import_nn(num_classes, device):
             params.requires_grad = True
 
     # set model to run on GPU or CPU absed on availibility
-    model.to(device);
+    model.to(device)
 
     return model
 
+
 def define_config(model, device):
-    '''
+    """
     Configuração de treino
     Loss usada como CrossEntropyLoss
     SGD optimizer com 0.9 de momentum e learning rate 3e-4.
     According to many Deep learning experts and researchers such as Andrej karpathy 3e-4
     is a good learning rate choice.
-    '''
+    """
 
     # loss function
     # if GPU is available set loss function to use GPU
@@ -67,11 +69,17 @@ def define_config(model, device):
 
     return criterion, optimizer
 
-def train_valid(model, epochs,
-                train_gen, valid_gen,
-                criterion, optimizer,
-                device,
-                path_salvar_modelo):
+
+def train_valid(
+    model,
+    epochs,
+    train_gen,
+    valid_gen,
+    criterion,
+    optimizer,
+    device,
+    path_salvar_modelo,
+):
 
     # Local onde o modelo treinado será salvo
     pathlib_salvar_modelo = pathlib.Path(path_salvar_modelo)
@@ -143,7 +151,9 @@ def train_valid(model, epochs,
 
         # print training metrics
         # logger.info(f'\n\nEpoch {(i+1)}\nAccuracy: {trn_corr.item()*100/(total_images):2.2f} %  Loss: {temp_loss_train.item():2.4f}  Duration: {((e_end-e_start)/60):.2f} minutes\n') # total_images = 4 images per batch * 8 augmentations per image * batch length
-        print(f'Epoch {(i+1)}/{epochs}\nAccuracy: {trn_corr.item()*100/(total_images):2.2f} %  Loss: {temp_loss_train:2.4f}  Duration: {((e_end-e_start)/60):.2f} minutes') # total_images = 4 images per batch * 8 augmentations per image * batch length
+        print(
+            f"Epoch {(i+1)}/{epochs}\nAccuracy: {trn_corr.item()*100/(total_images):2.2f} %  Loss: {temp_loss_train:2.4f}  Duration: {((e_end-e_start)/60):.2f} minutes"
+        )  # total_images = 4 images per batch * 8 augmentations per image * batch length
 
         train_losses.append(temp_loss_train)
         train_correct.append(trn_corr.item())
@@ -176,20 +186,26 @@ def train_valid(model, epochs,
                 total_images += y.shape[0]
 
                 # get loss of validation set
-                loss += criterion(y_val.float(), torch.argmax(y, dim=1).long()).item() * X.size(0)
+                loss += criterion(
+                    y_val.float(), torch.argmax(y, dim=1).long()
+                ).item() * X.size(0)
 
         # média da loss, diferente do que está no notebook no drive
         loss /= len(valid_gen.dataset)
         # print validation metrics
-        print(f'Validation Accuracy {val_corr.item()*100/(total_images):2.2f} % Validation Loss: {loss:2.4f}')
+        print(
+            f"Validation Accuracy {val_corr.item()*100/(total_images):2.2f} % Validation Loss: {loss:2.4f}"
+        )
         # logger.info(f'\n\nValidation Accuracy {tst_corr.item()*100/(total_images):2.2f} % Validation Loss: {loss.item():2.4f}\n')
 
         # Salvando o modelo com a melhor acurácia
-        acc = val_corr.item()*100/(total_images)
+        acc = val_corr.item() * 100 / (total_images)
         if acc >= max_acc and loss < saved_loss:
-            torch.save(model.state_dict(), modelo_salvo) # TODO
+            torch.save(model.state_dict(), modelo_salvo)  # TODO
             # logger.info(f'\n\nSalvando modelo com acurácia {val_corr.item()*100/(total_images):2.2f} % e loss {loss:2.4f}\n em {modelo_salvo}\n\n')
-            print(f'\nSalvando modelo com acurácia {acc:2.2f} % e loss {loss:2.4f}\n em {modelo_salvo}\n')
+            print(
+                f"\nSalvando modelo com acurácia {acc:2.2f} % e loss {loss:2.4f}\n em {modelo_salvo}\n"
+            )
             max_acc = acc
             saved_loss = loss
 
@@ -206,37 +222,38 @@ def train_valid(model, epochs,
 
     # Plot de loss
     plt.figure()
-    plt.plot(train_losses, label='Training loss')
-    plt.plot(valid_losses, label='Validation loss')
+    plt.plot(train_losses, label="Training loss")
+    plt.plot(valid_losses, label="Validation loss")
     ax = plt.gca()
     ax.set(yticks=np.arange(0, 3, 0.3))
-    plt.title('Loss Metrics')
-    plt.ylabel('Loss')
-    plt.xlabel('Epochs')
+    plt.title("Loss Metrics")
+    plt.ylabel("Loss")
+    plt.xlabel("Epochs")
     plt.legend()
     # plt.show()
-    plt.savefig(f'{path_salvar_modelo}losses.png', bbox_inches='tight')
-
+    plt.savefig(f"{path_salvar_modelo}losses.png", bbox_inches="tight")
 
     # Plot de acurácia
     plt.figure()
-    plt.plot([t*100/int(len(train_gen.dataset)) for t in train_correct], label='Training accuracy')
-    plt.plot([t*100/int(len(valid_gen.dataset)) for t in valid_correct], label='Validation accuracy')
+    plt.plot(
+        [t * 100 / int(len(train_gen.dataset)) for t in train_correct],
+        label="Training accuracy",
+    )
+    plt.plot(
+        [t * 100 / int(len(valid_gen.dataset)) for t in valid_correct],
+        label="Validation accuracy",
+    )
     ax = plt.gca()
-    ax.set(yticks=range(0, 100+1, 10))
-    plt.title('Accuracy Metrics')
-    plt.ylabel('Accuracy')
-    plt.xlabel('Epochs')
+    ax.set(yticks=range(0, 100 + 1, 10))
+    plt.title("Accuracy Metrics")
+    plt.ylabel("Accuracy")
+    plt.xlabel("Epochs")
     plt.legend()
     # plt.show()
-    plt.savefig(f'{path_salvar_modelo}accuracy.png', bbox_inches='tight')
+    plt.savefig(f"{path_salvar_modelo}accuracy.png", bbox_inches="tight")
 
-def test(model,
-         test_gen,
-         criterion,
-         device,
-         path_salvar_modelo,
-         show_info=True):
+
+def test(model, test_gen, criterion, device, path_salvar_modelo, show_info=True):
 
     # Local onde o modelo treinado foi salvo (assume-se que o nome é modelo.pt)
     pathlib_salvar_modelo = pathlib.Path(path_salvar_modelo)
@@ -280,7 +297,9 @@ def test(model,
             predicted = torch.argmax(y_val, dim=1).data
             pred.append(predicted)
 
-            loss += criterion(y_val.float(), torch.argmax(y, dim=1).long()).item() * X.size(0)
+            loss += criterion(
+                y_val.float(), torch.argmax(y, dim=1).long()
+            ).item() * X.size(0)
 
             # número de acertos
             correct += (predicted == torch.argmax(y, dim=1)).sum()
@@ -294,26 +313,30 @@ def test(model,
         # logger.info(f"Test Loss: {loss:.4f}")
         # logger.info(f'Test accuracy: {correct.item()*100/(total_images):.2f}%')
         print(f"Test Loss: {loss:.4f}")
-        print(f'Test accuracy: {correct.item()*100/(total_images):.2f}%')
+        print(f"Test accuracy: {correct.item()*100/(total_images):.2f}%")
 
         # Convert list of tensors to tensors -> Para usar nas estatísticas
         labels = torch.stack(labels)
         pred = torch.stack(pred)
 
         # Define ground-truth labels as a list
-        LABELS = ['Meningioma', 'Glioma', 'Pituitary']
+        LABELS = ["Meningioma", "Glioma", "Pituitary"]
 
         # Plot the confusion matrix
-        arr = confusion_matrix(labels.view(-1).cpu(), pred.view(-1).cpu()) # corrigir no colab, essa linha estava errada, ytrue vem antes de ypred
+        arr = confusion_matrix(
+            labels.view(-1).cpu(), pred.view(-1).cpu()
+        )  # corrigir no colab, essa linha estava errada, ytrue vem antes de ypred
         df_cm = pd.DataFrame(arr, LABELS, LABELS)
-        plt.figure(figsize = (9,6))
-        sns.heatmap(df_cm, annot=True, fmt="d", cmap='viridis')
+        plt.figure(figsize=(9, 6))
+        sns.heatmap(df_cm, annot=True, fmt="d", cmap="viridis")
         plt.xlabel("Prediction")
         plt.ylabel("Target")
-        plt.savefig(f'{path_salvar_modelo}confusion matrix.png', bbox_inches='tight')
+        plt.savefig(f"{path_salvar_modelo}confusion matrix.png", bbox_inches="tight")
         # plt.show()
 
         # Print the classification report
         # logger.info(f"Clasification Report\n\n{classification_report(pred.view(-1).cpu(), labels.view(-1).cpu())}") # TODO
-        print(f"Clasification Report\n\n{classification_report(pred.view(-1).cpu(), labels.view(-1).cpu())}") # TODO
-    return correct.item()*100/(total_images), loss
+        print(
+            f"Clasification Report\n\n{classification_report(pred.view(-1).cpu(), labels.view(-1).cpu())}"
+        )  # TODO
+    return correct.item() * 100 / (total_images), loss
